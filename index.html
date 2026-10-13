@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>佐渡島マップ</title>
+    <title>佐渡島マップ（テスト版）</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 
@@ -418,7 +418,7 @@
 
 <body>
 
-    <h1>佐渡島マップ</h1>
+    <h1>佐渡島マップ <small style="font-size:16px;color:#c05600;">（テスト版）</small></h1>
 
     <!-- マップ切り替え（全員に表示） -->
     <div id="mapBar">
@@ -588,10 +588,10 @@
         // Supabase
         // =========================================
         const SUPABASE_URL =
-            "https://cskyusrujmxhczcgkdke.supabase.co";
+            "https://duckvgbpidcducxjiweh.supabase.co";
 
         const SUPABASE_PUBLISHABLE_KEY =
-            "sb_publishable_T-lOBrjyPzfkPUI8mLbHVA_FIRyAp5X";
+            "sb_publishable_p7houiZXM67fgzBY0qnJmQ_B6xxI7e9";
 
         const supabaseClient =
             window.supabase.createClient(
@@ -1173,7 +1173,13 @@
         // =========================================
         // スポット読み込み
         // =========================================
+        // 読み込みが同時に走ったとき、最後に始めたものだけを地図に反映する
+        // （古い読み込みの結果でマーカーが二重に置かれるのを防ぐ）
+        let loadPlacesSequence = 0;
+
         async function loadPlaces() {
+            const sequence = ++loadPlacesSequence;
+
             Object.values(layers).forEach(function(layer) {
                 layer.clearLayers();
             });
@@ -1219,6 +1225,14 @@
                     allImages = imageData || [];
                 }
             }
+
+            if (sequence !== loadPlacesSequence) {
+                return;
+            }
+
+            Object.values(layers).forEach(function(layer) {
+                layer.clearLayers();
+            });
 
             const imagesBySpot = {};
 
@@ -1570,7 +1584,7 @@
                 item.className = "existing-photo-item";
 
                 const img = document.createElement("img");
-                img.src = image.image_url;
+                img.src = getPhotoUrl(image);
                 img.alt = "登録済み写真";
 
                 const deleteButton = document.createElement("button");
@@ -1809,7 +1823,7 @@
                 await supabaseClient.auth.signInWithOAuth({
                     provider: "google",
                     options: {
-                        redirectTo: "https://ytrnht1222-cmd.github.io/sado_map/"
+                        redirectTo: "https://ytrnht1222-cmd.github.io/sado_map_v2/"
                     }
                 });
 
