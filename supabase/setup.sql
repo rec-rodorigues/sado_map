@@ -1,5 +1,5 @@
 -- =========================================================
--- 佐渡島マップ v2（テスト版）：新しい Supabase プロジェクトの初期設定
+-- 佐渡島マップ：Supabase プロジェクトの初期設定
 --
 -- Supabase ダッシュボード → SQL Editor に全文を貼り付けて「Run」。
 -- 本番（sado_map）のデータベースには一切触れません。
@@ -270,7 +270,7 @@ values ('your-google-account@gmail.com', 'admin')
 on conflict (email) do update set role = 'admin';
 
 -- 最初のマップ（本番からコピーしたスポットを入れる）
--- テスト版なので、最初からロック解除（誰でも編集可）にしています
+-- 最初はロック解除（誰でも編集可）の状態で作ります
 insert into public.maps (id, name, description, is_locked)
 values (1, '佐渡島マップ', '本番（sado_map）からコピーしたスポット', false)
 on conflict (id) do nothing;
