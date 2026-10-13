@@ -69,7 +69,8 @@
         }
 
         #authArea,
-        #adminPanel {
+        #adminPanel,
+        #mapBar {
             margin: 10px 0;
             padding: 12px;
             border-radius: 8px;
@@ -77,12 +78,18 @@
 
         #authArea {
             background: #f5f5f5;
+            font-size: 14px;
         }
 
         #adminPanel {
             display: none;
             background: #fff7e6;
             border: 1px solid #f0c36d;
+        }
+
+        #adminPanel h3,
+        #adminPanel h4 {
+            margin: 0 0 8px;
         }
 
         #authArea button,
@@ -102,45 +109,96 @@
             font-size: 14px;
         }
 
-        #memberForm {
+        /* マップ切り替え */
+        #mapBar {
+            background: #eef5ff;
+            border: 1px solid #b9d3f5;
+        }
+
+        .map-bar-row {
             display: flex;
             flex-wrap: wrap;
             gap: 8px;
             align-items: center;
         }
 
-        #newMemberEmail {
+        #mapSelect {
             padding: 8px;
-            width: 300px;
+            font-size: 15px;
+            min-width: 200px;
+            max-width: 100%;
+        }
+
+        #mapDescription {
+            margin-top: 6px;
+            font-size: 14px;
+            color: #444;
+            white-space: pre-wrap;
+        }
+
+        .lock-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 999px;
+            font-size: 13px;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .lock-badge.unlocked {
+            background: #e3f6e5;
+            color: #1d6b2a;
+            border: 1px solid #9fd5a8;
+        }
+
+        .lock-badge.locked {
+            background: #f1f1f1;
+            color: #555;
+            border: 1px solid #ccc;
+        }
+
+        /* 管理者パネル */
+        .admin-section {
+            padding: 10px 0;
+            border-top: 1px solid #f0d9a8;
+        }
+
+        .admin-section:first-of-type {
+            border-top: 0;
+        }
+
+        .admin-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .admin-form input[type="text"] {
+            padding: 8px;
+            width: 260px;
             max-width: 100%;
             box-sizing: border-box;
         }
 
-        #memberList {
-            margin-top: 14px;
+        .admin-form label {
+            font-size: 14px;
         }
 
-        .member-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            padding: 8px 0;
-            border-bottom: 1px solid #ddd;
-        }
-
-        .member-email {
-            flex: 1;
-            word-break: break-all;
-        }
-
-        .member-role {
-            font-size: 13px;
-            color: #666;
-            white-space: nowrap;
+        #controls {
+            display: none;
+            margin: 10px 0;
         }
 
         #modeText {
             font-weight: bold;
+        }
+
+        #editHint {
+            display: none;
+            font-size: 13px;
+            color: #666;
+            margin-left: 6px;
         }
 
         #categoryFilters {
@@ -362,40 +420,53 @@
 
     <h1>佐渡島マップ</h1>
 
-    <!-- Googleログイン -->
-    <div id="authArea">
-        <button id="loginButton" type="button">🔑 Googleでログイン</button>
-        <button id="logoutButton" type="button" style="display:none;">ログアウト</button>
-        <span id="userInfo"></span>
-        <span id="roleInfo"></span>
+    <!-- マップ切り替え（全員に表示） -->
+    <div id="mapBar">
+        <div class="map-bar-row">
+            <label for="mapSelect"><strong>🗺️ マップ：</strong></label>
+            <select id="mapSelect"></select>
+            <span id="lockBadge" class="lock-badge locked">🔒 閲覧のみ</span>
+        </div>
+        <div id="mapDescription"></div>
     </div>
 
-    <!-- REC管理者だけ表示 -->
-    <div id="adminPanel">
-        <h3>👑 RECメンバー管理</h3>
-
-        <div id="memberForm">
-            <span>Googleアカウントのメールアドレス：</span>
-            <input
-                type="email"
-                id="newMemberEmail"
-                placeholder="example@gmail.com"
-            >
-            <button id="addMemberButton" type="button">➕ メンバーを許可</button>
-            <button id="reloadMembersButton" type="button">🔄 更新</button>
-        </div>
-
-        <div class="small-note" style="margin-top:6px;">
-            ※相手がGoogleログインに使うメールアドレスと同じものを入力してください。
-        </div>
-
-        <div id="memberList"></div>
-    </div>
-
-    <!-- RECメンバーだけ表示 -->
-    <div id="controls" style="display:none; margin:10px 0;">
+    <!-- 編集モード（ロック解除中のマップでは全員に表示） -->
+    <div id="controls">
         <button id="editModeButton" type="button">✏️ 編集モード</button>
         <span id="modeText">現在：閲覧モード</span>
+        <span id="editHint">地図をクリックするとスポットを追加できます</span>
+    </div>
+
+    <!-- 管理者だけ表示 -->
+    <div id="adminPanel">
+        <h3>👑 管理者メニュー</h3>
+
+        <div class="admin-section">
+            <h4>このマップの設定</h4>
+            <div class="admin-form">
+                <button id="toggleLockButton" type="button">🔒 編集をロック</button>
+                <span id="lockStatusText" class="small-note"></span>
+            </div>
+            <div class="admin-form" style="margin-top:8px;">
+                <input type="text" id="editMapName" placeholder="マップ名">
+                <input type="text" id="editMapDescription" placeholder="説明（任意）">
+                <button id="saveMapButton" type="button">💾 名前・説明を保存</button>
+                <button id="deleteMapButton" type="button">🗑️ このマップを削除</button>
+            </div>
+        </div>
+
+        <div class="admin-section">
+            <h4>新しいマップを作る</h4>
+            <div class="admin-form">
+                <input type="text" id="newMapName" placeholder="例：夏合宿の計画用">
+                <input type="text" id="newMapDescription" placeholder="説明（任意）">
+                <label>
+                    <input type="checkbox" id="newMapUnlocked">
+                    作成後すぐに誰でも編集できるようにする
+                </label>
+                <button id="createMapButton" type="button">➕ 作成</button>
+            </div>
+        </div>
     </div>
 
     <!-- カテゴリー絞り込み -->
@@ -410,6 +481,14 @@
     </div>
 
     <div id="map"></div>
+
+    <!-- 管理者ログイン（閲覧・編集だけならログイン不要） -->
+    <div id="authArea">
+        <button id="loginButton" type="button">🔑 管理者ログイン（Google）</button>
+        <button id="logoutButton" type="button" style="display:none;">ログアウト</button>
+        <span id="userInfo"></span>
+        <span id="roleInfo"></span>
+    </div>
 
 
     <!-- 写真ライトボックス -->
@@ -692,8 +771,9 @@
         // =========================================
         let editMode = false;
         let editingSpotId = null;
-        let currentUserIsMember = false;
         let currentUserIsAdmin = false;
+        let maps = [];
+        let currentMapId = null;
         let newSpotLat = null;
         let newSpotLng = null;
         let temporaryMarker = null;
@@ -713,9 +793,61 @@
         const controls = document.getElementById("controls");
         const editModeButton = document.getElementById("editModeButton");
         const modeText = document.getElementById("modeText");
+        const editHint = document.getElementById("editHint");
         const adminPanel = document.getElementById("adminPanel");
-        const newMemberEmail = document.getElementById("newMemberEmail");
-        const memberList = document.getElementById("memberList");
+        const mapSelect = document.getElementById("mapSelect");
+        const lockBadge = document.getElementById("lockBadge");
+        const mapDescription = document.getElementById("mapDescription");
+        const toggleLockButton = document.getElementById("toggleLockButton");
+        const lockStatusText = document.getElementById("lockStatusText");
+        const editMapName = document.getElementById("editMapName");
+        const editMapDescription = document.getElementById("editMapDescription");
+        const newMapName = document.getElementById("newMapName");
+        const newMapDescription = document.getElementById("newMapDescription");
+        const newMapUnlocked = document.getElementById("newMapUnlocked");
+
+        // =========================================
+        // 今のマップと編集できるかどうか
+        // =========================================
+        function getCurrentMap() {
+            return maps.find(function(m) {
+                return m.id === currentMapId;
+            }) || null;
+        }
+
+        // ロック解除中のマップなら誰でも、ロック中でも管理者は編集できる
+        function canEdit() {
+            const currentMap = getCurrentMap();
+
+            if (!currentMap) {
+                return false;
+            }
+
+            return !currentMap.is_locked || currentUserIsAdmin;
+        }
+
+        // 保存エラーがロックによるものかを判定して、分かりやすく伝える
+        async function explainSaveError(prefix, error) {
+            console.error(prefix, error);
+
+            const isPermissionError =
+                error && (
+                    error.code === "42501" ||
+                    /row-level security|permission|policy/i.test(error.message || "")
+                );
+
+            if (isPermissionError) {
+                alert(
+                    prefix + "\n\n" +
+                    "このマップは管理者によってロックされたため、編集できません。"
+                );
+                await loadMaps();
+                await loadPlaces();
+                return;
+            }
+
+            alert(prefix + "\n" + (error && error.message ? error.message : ""));
+        }
 
         // =========================================
         // 画面上のHTMLに安全に文字を入れるための関数
@@ -1042,10 +1174,19 @@
         // スポット読み込み
         // =========================================
         async function loadPlaces() {
+            Object.values(layers).forEach(function(layer) {
+                layer.clearLayers();
+            });
+
+            if (currentMapId === null) {
+                return;
+            }
+
             const { data, error } =
                 await supabaseClient
                     .from("spots")
                     .select("*")
+                    .eq("map_id", currentMapId)
                     .order("id", { ascending: true });
 
             if (error) {
@@ -1057,23 +1198,26 @@
                 return;
             }
 
-            Object.values(layers).forEach(function(layer) {
-                layer.clearLayers();
+            // このマップのスポットの写真だけをまとめて取得
+            let allImages = [];
+            const spotIds = (data || []).map(function(place) {
+                return place.id;
             });
 
-            // 写真をまとめて取得
-            let allImages = [];
-            const { data: imageData, error: imageError } =
-                await supabaseClient
-                    .from("spot_images")
-                    .select("id, spot_id, image_url, file_path, created_at")
-                    .order("created_at", { ascending: true });
+            if (spotIds.length > 0) {
+                const { data: imageData, error: imageError } =
+                    await supabaseClient
+                        .from("spot_images")
+                        .select("id, spot_id, image_url, file_path, created_at")
+                        .in("spot_id", spotIds)
+                        .order("created_at", { ascending: true });
 
-            if (imageError) {
-                console.error("写真一覧取得エラー:", imageError);
-                console.error("Supabaseのspot_images SELECTポリシーを確認してください。");
-            } else {
-                allImages = imageData || [];
+                if (imageError) {
+                    console.error("写真一覧取得エラー:", imageError);
+                    console.error("Supabaseのspot_images SELECTポリシーを確認してください。");
+                } else {
+                    allImages = imageData || [];
+                }
             }
 
             const imagesBySpot = {};
@@ -1147,7 +1291,7 @@
                         }
                 `;
 
-                if (currentUserIsMember && editMode) {
+                if (canEdit() && editMode) {
                     popupHtml += `
                         <div style="margin-top:12px;">
                             <button
@@ -1215,22 +1359,27 @@
         // =========================================
         // 編集モード
         // =========================================
-        editModeButton.addEventListener("click", async function() {
-            if (!currentUserIsMember) {
-                alert("RECメンバーだけが編集できます。");
-                return;
-            }
-
-            editMode = !editMode;
+        function setEditMode(value) {
+            editMode = value;
 
             if (editMode) {
                 editModeButton.textContent = "👀 閲覧モードに戻す";
                 modeText.textContent = "現在：編集モード";
+                editHint.style.display = "inline";
             } else {
                 editModeButton.textContent = "✏️ 編集モード";
                 modeText.textContent = "現在：閲覧モード";
+                editHint.style.display = "none";
+            }
+        }
+
+        editModeButton.addEventListener("click", async function() {
+            if (!canEdit()) {
+                alert("このマップはロックされているため、閲覧のみできます。");
+                return;
             }
 
+            setEditMode(!editMode);
             await loadPlaces();
         });
 
@@ -1238,7 +1387,7 @@
         // 地図をクリックして新規スポット
         // =========================================
         map.on("click", function(e) {
-            if (!currentUserIsMember || !editMode) {
+            if (!canEdit() || !editMode) {
                 return;
             }
 
@@ -1295,8 +1444,8 @@
         // 新規スポット保存
         // =========================================
         document.getElementById("saveButton").addEventListener("click", async function() {
-            if (!currentUserIsMember) {
-                alert("RECメンバーだけがスポットを追加できます。");
+            if (!canEdit()) {
+                alert("このマップはロックされているため、スポットを追加できません。");
                 return;
             }
 
@@ -1321,6 +1470,7 @@
                 await supabaseClient
                     .from("spots")
                     .insert({
+                        map_id: currentMapId,
                         name: name,
                         lat: newSpotLat,
                         lng: newSpotLng,
@@ -1334,8 +1484,7 @@
                     .single();
 
             if (error) {
-                console.error("スポット保存エラー:", error);
-                alert("スポットの保存に失敗しました。\n" + error.message);
+                await explainSaveError("スポットの保存に失敗しました。", error);
                 return;
             }
 
@@ -1360,8 +1509,8 @@
         // 編集フォームを開く
         // =========================================
         async function openEditForm(id) {
-            if (!currentUserIsMember) {
-                alert("RECメンバーだけが編集できます。");
+            if (!canEdit()) {
+                alert("このマップはロックされているため、編集できません。");
                 return;
             }
 
@@ -1502,8 +1651,8 @@
         // 編集保存
         // =========================================
         document.getElementById("editSaveButton").addEventListener("click", async function() {
-            if (!currentUserIsMember) {
-                alert("RECメンバーだけが編集できます。");
+            if (!canEdit()) {
+                alert("このマップはロックされているため、編集できません。");
                 return;
             }
 
@@ -1524,7 +1673,7 @@
                 return;
             }
 
-            const { error } =
+            const { data: updatedRows, error } =
                 await supabaseClient
                     .from("spots")
                     .update({
@@ -1535,11 +1684,21 @@
                         activity_history: activity,
                         note: note
                     })
-                    .eq("id", editingSpotId);
+                    .eq("id", editingSpotId)
+                    .select("id");
+
+            // ロックで拒否された更新は、エラーではなく「0件更新」として返ってくる
+            if (!error && (!updatedRows || updatedRows.length === 0)) {
+                closeEditForm();
+                await explainSaveError(
+                    "スポットの更新に失敗しました。",
+                    { code: "42501", message: "row-level security" }
+                );
+                return;
+            }
 
             if (error) {
-                console.error("スポット更新エラー:", error);
-                alert("スポットの更新に失敗しました。\n" + error.message);
+                await explainSaveError("スポットの更新に失敗しました。", error);
                 return;
             }
 
@@ -1676,27 +1835,20 @@
         });
 
         // =========================================
-        // ログイン確認
+        // ログイン確認（管理者かどうか）
         // =========================================
         async function checkLogin() {
             const {
                 data: { session }
             } = await supabaseClient.auth.getSession();
 
-            currentUserIsMember = false;
             currentUserIsAdmin = false;
-            editMode = false;
-
-            editModeButton.textContent = "✏️ 編集モード";
-            modeText.textContent = "現在：閲覧モード";
 
             if (!session) {
                 loginButton.style.display = "inline-block";
                 logoutButton.style.display = "none";
                 userInfo.textContent = "";
                 roleInfo.textContent = "";
-                controls.style.display = "none";
-                adminPanel.style.display = "none";
                 return;
             }
 
@@ -1704,206 +1856,350 @@
             logoutButton.style.display = "inline-block";
             userInfo.textContent = "ログイン中：" + (session.user.email || "");
 
-            const { data: isMember, error: memberError } =
-                await supabaseClient.rpc("is_rec_member");
-
-            if (memberError) {
-                console.error("メンバー確認エラー:", memberError);
-                alert("RECメンバー確認に失敗しました。\n" + memberError.message);
-                return;
-            }
-
-            if (!isMember) {
-                roleInfo.textContent = "（RECメンバーではありません）";
-                controls.style.display = "none";
-                adminPanel.style.display = "none";
-                return;
-            }
-
-            currentUserIsMember = true;
-
             const { data: isAdmin, error: adminError } =
-                await supabaseClient.rpc("is_rec_admin");
+                await supabaseClient.rpc("is_map_admin");
 
             if (adminError) {
                 console.error("管理者確認エラー:", adminError);
-                currentUserIsAdmin = false;
-            } else {
-                currentUserIsAdmin = !!isAdmin;
-            }
-
-            roleInfo.textContent =
-                currentUserIsAdmin
-                    ? "（REC管理者）"
-                    : "（RECメンバー）";
-
-            controls.style.display = "block";
-
-            if (currentUserIsAdmin) {
-                adminPanel.style.display = "block";
-                await loadMembers();
-            } else {
-                adminPanel.style.display = "none";
-            }
-        }
-
-        // =========================================
-        // 管理者：メンバー一覧
-        // =========================================
-        async function loadMembers() {
-            if (!currentUserIsAdmin) {
+                roleInfo.textContent = "";
                 return;
             }
 
+            currentUserIsAdmin = !!isAdmin;
+            roleInfo.textContent = currentUserIsAdmin ? "（管理者）" : "";
+        }
+
+        // =========================================
+        // マップ一覧
+        // =========================================
+        function getMapIdFromUrl() {
+            const value = new URLSearchParams(location.search).get("map");
+            const id = Number(value);
+            return value && Number.isInteger(id) ? id : null;
+        }
+
+        function setMapIdToUrl(id) {
+            const url = new URL(location.href);
+            url.searchParams.set("map", String(id));
+            history.replaceState(null, "", url);
+        }
+
+        async function loadMaps() {
             const { data, error } =
                 await supabaseClient
-                    .from("members")
-                    .select("email, role, created_at")
+                    .from("maps")
+                    .select("id, name, description, is_locked, created_at")
                     .order("created_at", { ascending: true });
 
             if (error) {
-                console.error("メンバー一覧取得エラー:", error);
-                memberList.innerHTML =
-                    "<p>メンバー一覧を取得できませんでした。<br>" +
-                    escapeHtml(error.message) +
-                    "</p>";
-                return;
+                console.error("マップ一覧取得エラー:", error);
+                alert("マップ一覧を取得できませんでした。\n" + error.message);
+                maps = [];
+            } else {
+                maps = data || [];
             }
 
-            memberList.innerHTML = "";
+            // 表示するマップを決める：今のマップ → URLの指定 → 最初のマップ
+            const exists = function(id) {
+                return maps.some(function(m) { return m.id === id; });
+            };
 
-            if (!data || data.length === 0) {
-                memberList.innerHTML = "<p>登録されているメンバーはいません。</p>";
-                return;
+            if (!exists(currentMapId)) {
+                const fromUrl = getMapIdFromUrl();
+                currentMapId = exists(fromUrl)
+                    ? fromUrl
+                    : (maps[0] ? maps[0].id : null);
             }
 
-            const title = document.createElement("strong");
-            title.textContent = "現在のメンバー";
-            memberList.appendChild(title);
+            mapSelect.innerHTML = "";
 
-            data.forEach(function(member) {
-                const row = document.createElement("div");
-                row.className = "member-row";
-
-                const email = document.createElement("span");
-                email.className = "member-email";
-                email.textContent = member.email;
-
-                const role = document.createElement("span");
-                role.className = "member-role";
-                role.textContent = member.role === "admin" ? "管理者" : "メンバー";
-
-                row.appendChild(email);
-                row.appendChild(role);
-
-                // 管理者の削除ボタンは出さない
-                if (member.role !== "admin") {
-                    const removeButton = document.createElement("button");
-                    removeButton.type = "button";
-                    removeButton.textContent = "🚫 許可を取り消す";
-                    removeButton.addEventListener("click", function() {
-                        removeMember(member.email);
-                    });
-                    row.appendChild(removeButton);
-                }
-
-                memberList.appendChild(row);
+            maps.forEach(function(m) {
+                const option = document.createElement("option");
+                option.value = String(m.id);
+                option.textContent = (m.is_locked ? "🔒 " : "🔓 ") + m.name;
+                mapSelect.appendChild(option);
             });
+
+            if (currentMapId !== null) {
+                mapSelect.value = String(currentMapId);
+                setMapIdToUrl(currentMapId);
+            }
+
+            updateMapUi();
         }
 
-        // =========================================
-        // 管理者：メンバー追加
-        // =========================================
-        async function addMember() {
-            if (!currentUserIsAdmin) {
-                alert("メンバーを追加できるのは管理者だけです。");
-                return;
+        // ロック状態に合わせて画面を切り替える
+        function updateMapUi() {
+            const currentMap = getCurrentMap();
+
+            if (!currentMap) {
+                lockBadge.className = "lock-badge locked";
+                lockBadge.textContent = "マップがありません";
+                mapDescription.textContent = "";
+                controls.style.display = "none";
+            } else {
+                lockBadge.className =
+                    "lock-badge " + (currentMap.is_locked ? "locked" : "unlocked");
+                lockBadge.textContent =
+                    currentMap.is_locked
+                        ? "🔒 閲覧のみ"
+                        : "🔓 誰でも編集できます";
+                mapDescription.textContent = currentMap.description || "";
+                controls.style.display = canEdit() ? "block" : "none";
             }
 
-            const email = newMemberEmail.value.trim().toLowerCase();
-
-            if (!email) {
-                alert("Googleアカウントのメールアドレスを入力してください。");
-                return;
+            if (!canEdit() && editMode) {
+                setEditMode(false);
+                closeSpotForm();
+                closeEditForm();
             }
 
-            if (!email.includes("@")) {
-                alert("メールアドレスの形式を確認してください。");
+            adminPanel.style.display = currentUserIsAdmin ? "block" : "none";
+
+            if (currentUserIsAdmin) {
+                const hasMap = !!currentMap;
+
+                toggleLockButton.disabled = !hasMap;
+                document.getElementById("saveMapButton").disabled = !hasMap;
+                document.getElementById("deleteMapButton").disabled = !hasMap;
+
+                if (hasMap) {
+                    toggleLockButton.textContent =
+                        currentMap.is_locked
+                            ? "🔓 ロックを解除（誰でも編集可）"
+                            : "🔒 編集をロック（閲覧のみ）";
+                    lockStatusText.textContent =
+                        currentMap.is_locked
+                            ? "現在：ロック中（管理者以外は閲覧のみ）"
+                            : "現在：誰でも編集できます";
+                    editMapName.value = currentMap.name || "";
+                    editMapDescription.value = currentMap.description || "";
+                } else {
+                    lockStatusText.textContent = "";
+                    editMapName.value = "";
+                    editMapDescription.value = "";
+                }
+            }
+        }
+
+        mapSelect.addEventListener("change", async function() {
+            currentMapId = Number(mapSelect.value);
+            setMapIdToUrl(currentMapId);
+            setEditMode(false);
+            closeSpotForm();
+            closeEditForm();
+            updateMapUi();
+            await loadPlaces();
+        });
+
+        // =========================================
+        // 管理者：ロックの切り替え
+        // =========================================
+        toggleLockButton.addEventListener("click", async function() {
+            const currentMap = getCurrentMap();
+
+            if (!currentUserIsAdmin || !currentMap) {
                 return;
             }
 
             const { error } =
                 await supabaseClient
-                    .from("members")
-                    .insert({
-                        email: email,
-                        role: "member"
-                    });
+                    .from("maps")
+                    .update({ is_locked: !currentMap.is_locked })
+                    .eq("id", currentMap.id);
 
             if (error) {
-                console.error("メンバー追加エラー:", error);
-
-                if (error.code === "23505") {
-                    alert("このGoogleアカウントはすでに登録されています。");
-                } else {
-                    alert("メンバーの追加に失敗しました。\n" + error.message);
-                }
-
+                console.error("ロック切り替えエラー:", error);
+                alert("ロックの切り替えに失敗しました。\n" + error.message);
                 return;
             }
 
-            alert(
-                email +
-                " をRECメンバーとして許可しました！\n\n" +
-                "この人はGoogleログイン後、マップを編集できるようになります。"
-            );
+            await loadMaps();
+            await loadPlaces();
+        });
 
-            newMemberEmail.value = "";
-            await loadMembers();
+        // =========================================
+        // 管理者：マップ名・説明の変更
+        // =========================================
+        document.getElementById("saveMapButton").addEventListener("click", async function() {
+            const currentMap = getCurrentMap();
+
+            if (!currentUserIsAdmin || !currentMap) {
+                return;
+            }
+
+            const name = editMapName.value.trim();
+
+            if (!name) {
+                alert("マップ名を入力してください。");
+                return;
+            }
+
+            const { error } =
+                await supabaseClient
+                    .from("maps")
+                    .update({
+                        name: name,
+                        description: editMapDescription.value.trim()
+                    })
+                    .eq("id", currentMap.id);
+
+            if (error) {
+                console.error("マップ更新エラー:", error);
+                alert("マップの更新に失敗しました。\n" + error.message);
+                return;
+            }
+
+            await loadMaps();
+        });
+
+        // =========================================
+        // 管理者：マップ作成
+        // =========================================
+        async function createMap() {
+            if (!currentUserIsAdmin) {
+                return;
+            }
+
+            const name = newMapName.value.trim();
+
+            if (!name) {
+                alert("マップ名を入力してください。");
+                return;
+            }
+
+            const { data, error } =
+                await supabaseClient
+                    .from("maps")
+                    .insert({
+                        name: name,
+                        description: newMapDescription.value.trim(),
+                        is_locked: !newMapUnlocked.checked
+                    })
+                    .select()
+                    .single();
+
+            if (error) {
+                console.error("マップ作成エラー:", error);
+                alert("マップの作成に失敗しました。\n" + error.message);
+                return;
+            }
+
+            newMapName.value = "";
+            newMapDescription.value = "";
+            newMapUnlocked.checked = false;
+
+            currentMapId = data.id;
+            setEditMode(false);
+            await loadMaps();
+            await loadPlaces();
+
+            alert("「" + data.name + "」を作成しました！");
         }
 
+        document.getElementById("createMapButton").addEventListener("click", createMap);
+
+        newMapName.addEventListener("keydown", function(event) {
+            if (event.key === "Enter") {
+                createMap();
+            }
+        });
+
         // =========================================
-        // 管理者：メンバー削除
+        // 管理者：マップ削除（中のスポットと写真も削除）
         // =========================================
-        async function removeMember(email) {
-            if (!currentUserIsAdmin) {
-                alert("メンバーの許可を取り消せるのは管理者だけです。");
+        document.getElementById("deleteMapButton").addEventListener("click", async function() {
+            const currentMap = getCurrentMap();
+
+            if (!currentUserIsAdmin || !currentMap) {
                 return;
             }
 
             const answer = confirm(
-                "「" + email + "」の編集権限を取り消しますか？\n\n" +
-                "取り消すと、このGoogleアカウントではマップを編集できなくなります。"
+                "マップ「" + currentMap.name + "」を削除しますか？\n\n" +
+                "このマップのスポットと写真もすべて削除されます。\n" +
+                "この操作は元に戻せません。"
             );
 
             if (!answer) {
                 return;
             }
 
-            const { error } =
+            const { data: spots, error: spotsError } =
                 await supabaseClient
-                    .from("members")
-                    .delete()
-                    .eq("email", email)
-                    .eq("role", "member");
+                    .from("spots")
+                    .select("id")
+                    .eq("map_id", currentMap.id);
 
-            if (error) {
-                console.error("メンバー削除エラー:", error);
-                alert("編集権限の取り消しに失敗しました。\n" + error.message);
+            if (spotsError) {
+                alert("スポット情報を取得できませんでした。\n" + spotsError.message);
                 return;
             }
 
-            alert(email + " の編集権限を取り消しました。");
-            await loadMembers();
-        }
+            const spotIds = (spots || []).map(function(s) { return s.id; });
 
-        document.getElementById("addMemberButton").addEventListener("click", addMember);
-        document.getElementById("reloadMembersButton").addEventListener("click", loadMembers);
+            if (spotIds.length > 0) {
+                const { data: images } =
+                    await supabaseClient
+                        .from("spot_images")
+                        .select("file_path")
+                        .in("spot_id", spotIds);
 
-        newMemberEmail.addEventListener("keydown", function(event) {
-            if (event.key === "Enter") {
-                addMember();
+                const filePaths = (images || [])
+                    .map(function(image) { return image.file_path; })
+                    .filter(function(path) { return !!path; });
+
+                if (filePaths.length > 0) {
+                    const { error: storageError } =
+                        await supabaseClient.storage
+                            .from("spot-images")
+                            .remove(filePaths);
+
+                    if (storageError) {
+                        console.error("写真ファイル削除エラー:", storageError);
+                    }
+                }
+
+                const { error: imageRowsError } =
+                    await supabaseClient
+                        .from("spot_images")
+                        .delete()
+                        .in("spot_id", spotIds);
+
+                if (imageRowsError) {
+                    console.error("写真情報削除エラー:", imageRowsError);
+                }
+
+                const { error: spotDeleteError } =
+                    await supabaseClient
+                        .from("spots")
+                        .delete()
+                        .eq("map_id", currentMap.id);
+
+                if (spotDeleteError) {
+                    alert("スポットの削除に失敗しました。\n" + spotDeleteError.message);
+                    return;
+                }
             }
+
+            const { error } =
+                await supabaseClient
+                    .from("maps")
+                    .delete()
+                    .eq("id", currentMap.id);
+
+            if (error) {
+                console.error("マップ削除エラー:", error);
+                alert("マップの削除に失敗しました。\n" + error.message);
+                return;
+            }
+
+            alert("マップ「" + currentMap.name + "」を削除しました。");
+
+            currentMapId = null;
+            setEditMode(false);
+            await loadMaps();
+            await loadPlaces();
         });
 
         // =========================================
@@ -1912,6 +2208,7 @@
         supabaseClient.auth.onAuthStateChange(function() {
             setTimeout(async function() {
                 await checkLogin();
+                await loadMaps();
                 await loadPlaces();
             }, 0);
         });
@@ -1921,6 +2218,7 @@
         // =========================================
         (async function initialize() {
             await checkLogin();
+            await loadMaps();
             await loadPlaces();
         })();
     </script>
