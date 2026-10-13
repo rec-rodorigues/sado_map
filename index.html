@@ -6,165 +6,338 @@
     <title>佐渡島マップ（テスト版）</title>
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@600;700&display=swap">
 
     <style>
+        /* =========================================
+           和モダンの配色（和紙・墨・朱）
+           ========================================= */
+        :root {
+            --washi: #F5F0E6;
+            --card: #FFFCF6;
+            --line: #DED3BF;
+            --line-strong: #C9BBA2;
+            --sumi: #2B2622;
+            --sub: #6F665B;
+            --shu: #B33A2B;
+            --shu-dark: #8E2E20;
+            --shu-soft: #F3E3DC;
+            --kin: #A5822F;
+            --kin-soft: #F2EAD3;
+            --koke: #5B7C4F;
+            --koke-soft: #E5ECDD;
+            --ai: #3E5C76;
+            --radius: 4px;
+            --serif: "Noto Serif JP", "Yu Mincho", serif;
+            --sans: "Noto Sans JP", "Hiragino Sans", "Yu Gothic", sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
         body {
             margin: 0;
-            padding: 16px;
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: var(--washi);
+            color: var(--sumi);
+            font-family: var(--sans);
+            font-size: 15px;
+            line-height: 1.6;
         }
 
-        h1 {
-            margin-top: 0;
+        .page {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 16px 24px;
         }
 
-        #map {
-            height: 600px;
-            width: 100%;
-            position: relative;
+        button,
+        input,
+        select,
+        textarea {
+            font-family: inherit;
+            font-size: inherit;
+            color: inherit;
         }
 
-        /* 地図を全画面表示したときのサイズ */
-        #map:fullscreen {
-            width: 100vw;
-            height: 100vh;
+        .ti {
+            font-size: 1.1em;
+            vertical-align: -0.12em;
         }
 
-        #map:-webkit-full-screen {
-            width: 100vw;
-            height: 100vh;
+        /* =========================================
+           ヘッダー
+           ========================================= */
+        .site-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 20px 0 16px;
+            margin-bottom: 4px;
+            border-bottom: 1px solid var(--line);
         }
 
-        /* 全画面ボタン */
-        .fullscreen-control {
-            background: white;
-            border: 2px solid rgba(0,0,0,0.2);
-            border-radius: 4px;
-            box-shadow: 0 1px 5px rgba(0,0,0,0.25);
-            overflow: hidden;
+        .site-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: var(--radius);
+            background: var(--sumi);
+            color: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
         }
 
-        .fullscreen-control button {
-            display: block;
-            width: 36px;
-            height: 36px;
-            border: 0;
-            background: white;
+        .site-title {
+            margin: 0;
+            font-family: var(--serif);
+            font-weight: 700;
+            font-size: 26px;
+            letter-spacing: 0.08em;
+            line-height: 1.2;
+        }
+
+        .site-subtitle {
+            margin: 2px 0 0;
+            font-size: 12px;
+            color: var(--sub);
+            letter-spacing: 0.1em;
+        }
+
+        .test-badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: var(--radius);
+            background: var(--shu);
+            color: var(--card);
+            letter-spacing: 0.05em;
+            white-space: nowrap;
+            align-self: flex-start;
+            margin-top: 4px;
+        }
+
+        /* =========================================
+           共通パーツ：カード・ボタン・入力欄
+           ========================================= */
+        .card {
+            background: var(--card);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            margin: 14px 0;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: var(--card);
+            color: var(--sumi);
             cursor: pointer;
-            font-size: 20px;
-            line-height: 36px;
-            padding: 0;
+            line-height: 1.4;
+            white-space: nowrap;
+            transition: background 0.15s, border-color 0.15s, transform 0.05s;
         }
 
-        .fullscreen-control button:hover {
-            background: #f4f4f4;
+        .btn:hover {
+            background: var(--washi);
+            border-color: var(--sumi);
         }
 
-        .emoji-marker {
-            font-size: 30px;
-            text-align: center;
-            line-height: 40px;
-            background: none;
-            border: none;
+        .btn:active {
+            transform: translateY(1px);
         }
 
-        #authArea,
-        #adminPanel,
-        #mapBar {
-            margin: 10px 0;
-            padding: 12px;
-            border-radius: 8px;
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
         }
 
-        #authArea {
-            background: #f5f5f5;
-            font-size: 14px;
+        .btn-primary {
+            background: var(--sumi);
+            border-color: var(--sumi);
+            color: var(--card);
         }
 
-        #adminPanel {
-            display: none;
-            background: #fff7e6;
-            border: 1px solid #f0c36d;
+        .btn-primary:hover {
+            background: #45403B;
+            border-color: #45403B;
         }
 
-        #adminPanel h3,
-        #adminPanel h4 {
-            margin: 0 0 8px;
+        .btn-accent {
+            background: var(--shu);
+            border-color: var(--shu);
+            color: var(--card);
         }
 
-        #authArea button,
-        #adminPanel button,
-        #controls button,
-        #categoryFilters button,
-        #formButtons button,
-        #editFormButtons button {
-            padding: 8px 12px;
-            margin-right: 6px;
-            cursor: pointer;
+        .btn-accent:hover {
+            background: var(--shu-dark);
+            border-color: var(--shu-dark);
         }
 
-        #userInfo,
-        #roleInfo {
-            margin-left: 6px;
-            font-size: 14px;
+        .btn-danger {
+            color: var(--shu);
+            border-color: #E3B8AF;
         }
 
-        /* マップ切り替え */
-        #mapBar {
-            background: #eef5ff;
-            border: 1px solid #b9d3f5;
+        .btn-danger:hover {
+            background: var(--shu-soft);
+            border-color: var(--shu);
         }
 
+        .btn-small {
+            padding: 5px 10px;
+            font-size: 13px;
+        }
+
+        input[type="text"],
+        input[type="email"],
+        select,
+        textarea {
+            padding: 8px 10px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: #FFFFFF;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        input[type="text"]:focus,
+        input[type="email"]:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--sumi);
+            box-shadow: 0 0 0 3px rgba(43, 38, 34, 0.12);
+        }
+
+        input[type="checkbox"] {
+            accent-color: var(--shu);
+        }
+
+        .field-label {
+            font-size: 12px;
+            color: var(--sub);
+            letter-spacing: 0.05em;
+        }
+
+        .small-note {
+            font-size: 12px;
+            color: var(--sub);
+        }
+
+        /* =========================================
+           マップ切り替え・編集モード
+           ========================================= */
         .map-bar-row {
             display: flex;
             flex-wrap: wrap;
-            gap: 8px;
+            gap: 10px;
             align-items: center;
         }
 
         #mapSelect {
-            padding: 8px;
-            font-size: 15px;
-            min-width: 200px;
+            min-width: 220px;
             max-width: 100%;
+            font-size: 15px;
         }
 
         #mapDescription {
-            margin-top: 6px;
-            font-size: 14px;
-            color: #444;
+            margin-top: 8px;
+            font-size: 13px;
+            color: var(--sub);
             white-space: pre-wrap;
         }
 
+        #mapDescription:empty {
+            display: none;
+        }
+
         .lock-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 3px 10px;
+            border-radius: var(--radius);
+            font-size: 12px;
             white-space: nowrap;
         }
 
         .lock-badge.unlocked {
-            background: #e3f6e5;
-            color: #1d6b2a;
-            border: 1px solid #9fd5a8;
+            background: var(--koke-soft);
+            color: #3B5432;
         }
 
         .lock-badge.locked {
-            background: #f1f1f1;
-            color: #555;
-            border: 1px solid #ccc;
+            background: #ECE6DA;
+            color: var(--sub);
         }
 
-        /* 管理者パネル */
+        .map-bar-spacer {
+            flex: 1;
+        }
+
+        #controls {
+            display: none;
+        }
+
+        .controls-row {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 10px;
+        }
+
+        #modeText {
+            font-size: 13px;
+            color: var(--sub);
+        }
+
+        #editHint {
+            display: none;
+            font-size: 12px;
+            padding: 3px 10px;
+            border-radius: var(--radius);
+            background: var(--shu-soft);
+            color: var(--shu-dark);
+        }
+
+        /* =========================================
+           管理者メニュー
+           ========================================= */
+        #adminPanel {
+            display: none;
+            border-left: 3px solid var(--shu);
+            border-radius: 0;
+        }
+
+        .admin-title {
+            margin: 0 0 4px;
+            font-family: var(--serif);
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .admin-section {
-            padding: 10px 0;
-            border-top: 1px solid #f0d9a8;
+            padding: 12px 0 4px;
+            border-top: 1px dashed var(--line);
+            margin-top: 10px;
         }
 
-        .admin-section:first-of-type {
-            border-top: 0;
+        .admin-section h4 {
+            margin: 0 0 8px;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--sub);
         }
 
         .admin-form {
@@ -175,98 +348,270 @@
         }
 
         .admin-form input[type="text"] {
-            padding: 8px;
-            width: 260px;
+            width: 240px;
             max-width: 100%;
-            box-sizing: border-box;
         }
 
         .admin-form label {
-            font-size: 14px;
-        }
-
-        #controls {
-            display: none;
-            margin: 10px 0;
-        }
-
-        #modeText {
-            font-weight: bold;
-        }
-
-        #editHint {
-            display: none;
             font-size: 13px;
-            color: #666;
-            margin-left: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
         }
 
+        /* =========================================
+           カテゴリーのチップ
+           ========================================= */
         #categoryFilters {
-            margin: 10px 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin: 14px 0;
         }
 
-        #spotForm,
-        #editSpotForm {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 420px;
-            max-width: 92vw;
-            max-height: 88vh;
-            overflow-y: auto;
-            background: white;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            z-index: 1000;
-            box-sizing: border-box;
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 12px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: var(--card);
+            color: var(--sumi);
+            font-size: 13px;
+            cursor: pointer;
+            transition: background 0.15s, border-color 0.15s, color 0.15s;
         }
 
-        #spotForm label,
-        #editSpotForm label {
-            display: block;
-            margin-top: 10px;
-            margin-bottom: 4px;
-            font-weight: bold;
+        .chip .ti {
+            color: var(--chip-color, var(--sub));
         }
 
-        #spotForm input,
-        #spotForm select,
-        #spotForm textarea,
-        #editSpotForm input,
-        #editSpotForm select,
-        #editSpotForm textarea {
+        .chip:hover {
+            border-color: var(--sumi);
+        }
+
+        .chip.active {
+            background: var(--sumi);
+            border-color: var(--sumi);
+            color: var(--card);
+        }
+
+        .chip.active .ti {
+            color: var(--card);
+        }
+
+        /* =========================================
+           地図
+           ========================================= */
+        #map {
+            height: 600px;
             width: 100%;
-            box-sizing: border-box;
-            padding: 8px;
-            font-size: 14px;
+            position: relative;
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            background: #E9E4D8;
         }
 
-        #spotForm textarea,
-        #editSpotForm textarea {
-            min-height: 80px;
-            resize: vertical;
+        /* 地図の色を少し落ち着かせて、和紙の背景になじませる */
+        #map .leaflet-tile-pane {
+            filter: sepia(0.3) saturate(0.7) brightness(1.02);
         }
 
-        .photo-help {
-            font-size: 12px;
-            color: #666;
-            margin-top: 4px;
+        #map:fullscreen {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
         }
 
-        #formButtons,
-        #editFormButtons {
-            margin-top: 15px;
-            text-align: right;
+        #map:-webkit-full-screen {
+            width: 100vw;
+            height: 100vh;
+            border-radius: 0;
+        }
+
+        .leaflet-bar,
+        .fullscreen-control {
+            border: 1px solid var(--line-strong) !important;
+            border-radius: var(--radius) !important;
+            box-shadow: none !important;
+            overflow: hidden;
+        }
+
+        .leaflet-bar a,
+        .fullscreen-control button {
+            background: var(--card) !important;
+            color: var(--sumi) !important;
+        }
+
+        .leaflet-bar a:hover,
+        .fullscreen-control button:hover {
+            background: var(--washi) !important;
+        }
+
+        .fullscreen-control button {
+            display: block;
+            width: 34px;
+            height: 34px;
+            border: 0;
+            cursor: pointer;
+            font-size: 18px;
+            line-height: 34px;
+            padding: 0;
+        }
+
+        /* マーカー（しずく型のピン） */
+        .pin-marker {
+            background: none;
+            border: none;
+        }
+
+        .pin {
+            position: relative;
+            width: 32px;
+            height: 32px;
+            border-radius: 50% 50% 50% 0;
+            background: var(--pin-color, var(--sumi));
+            transform: rotate(-45deg);
+            border: 2px solid var(--card);
+            box-shadow: 0 2px 4px rgba(43, 38, 34, 0.35);
+        }
+
+        .pin .ti {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transform: rotate(45deg);
+            color: var(--card);
+            font-size: 16px;
+            vertical-align: 0;
+        }
+
+        .pin.pin-temp {
+            background: var(--card);
+            border-color: var(--shu);
+        }
+
+        .pin.pin-temp .ti {
+            color: var(--shu);
+        }
+
+        /* スポットのポップアップ */
+        .leaflet-popup-content-wrapper {
+            background: var(--card);
+            color: var(--sumi);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: 0 6px 20px rgba(43, 38, 34, 0.18);
+            padding: 0;
+            overflow: hidden;
+        }
+
+        .leaflet-popup-content {
+            margin: 0;
+            font-family: var(--sans);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .leaflet-popup-tip {
+            background: var(--card);
+        }
+
+        /* 写真の上でも見えるように、白い丸の上に「×」を置く */
+        .leaflet-container a.leaflet-popup-close-button {
+            top: 8px;
+            right: 8px;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background: rgba(255, 252, 246, 0.92);
+            color: var(--sumi);
+            font: 18px/26px var(--sans);
+            text-align: center;
+            z-index: 2;
+        }
+
+        .leaflet-container a.leaflet-popup-close-button:hover {
+            background: var(--card);
+            color: var(--shu);
+        }
+
+        .spot-popup {
+            width: 280px;
+            max-width: 72vw;
+        }
+
+        .spot-popup-body {
+            padding: 12px 14px 14px;
+        }
+
+        .spot-popup-title {
+            margin: 0 0 6px;
+            font-family: var(--serif);
+            font-size: 17px;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            padding-right: 16px;
+        }
+
+        .spot-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+            margin-bottom: 10px;
+        }
+
+        .spot-tag {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: var(--radius);
+            background: var(--tag-bg, #ECE6DA);
+            color: var(--tag-color, var(--sub));
+        }
+
+        .spot-info {
+            display: grid;
+            grid-template-columns: 18px minmax(0, 1fr);
+            gap: 2px 6px;
+            margin: 8px 0 0;
+            padding-top: 8px;
+            border-top: 1px dashed var(--line);
+        }
+
+        .spot-info .ti {
+            color: var(--sub);
+            margin-top: 3px;
+        }
+
+        .spot-info-label {
+            font-size: 11px;
+            color: var(--sub);
+        }
+
+        .spot-info-value {
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .spot-popup-actions {
+            display: flex;
+            gap: 6px;
+            margin-top: 12px;
+            padding-top: 10px;
+            border-top: 1px solid var(--line);
         }
 
         .spot-gallery {
             display: grid;
             grid-template-columns: repeat(2, minmax(0, 1fr));
-            gap: 6px;
-            margin: 8px 0 12px;
+            gap: 2px;
+        }
+
+        .spot-gallery.single {
+            grid-template-columns: minmax(0, 1fr);
         }
 
         .spot-gallery-item {
@@ -275,12 +620,115 @@
 
         .spot-gallery img {
             width: 100%;
-            height: 110px;
+            height: 120px;
             object-fit: cover;
-            border-radius: 6px;
-            cursor: pointer;
+            cursor: zoom-in;
             display: block;
-            background: #eee;
+            background: #ECE6DA;
+        }
+
+        .spot-gallery.single img {
+            height: 150px;
+        }
+
+        .spot-no-photo {
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            background: #EFE9DD;
+            color: var(--sub);
+            font-size: 12px;
+        }
+
+        /* =========================================
+           追加・編集フォーム（後ろを暗くして中央に表示）
+           ========================================= */
+        #spotForm,
+        #editSpotForm {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 440px;
+            max-width: 92vw;
+            max-height: 88vh;
+            overflow-y: auto;
+            background: var(--card);
+            padding: 22px 22px 18px;
+            border: 1px solid var(--line);
+            border-top: 4px solid var(--shu);
+            border-radius: var(--radius);
+            box-shadow: 0 0 0 100vmax rgba(43, 38, 34, 0.45), 0 10px 30px rgba(0, 0, 0, 0.25);
+            z-index: 1000;
+        }
+
+        #spotForm h2,
+        #editSpotForm h2 {
+            margin: 0 0 6px;
+            font-family: var(--serif);
+            font-size: 19px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #spotForm label,
+        #editSpotForm label {
+            display: block;
+            margin-top: 12px;
+            margin-bottom: 4px;
+            font-size: 12px;
+            color: var(--sub);
+            letter-spacing: 0.05em;
+        }
+
+        #spotForm input[type="text"],
+        #spotForm select,
+        #spotForm textarea,
+        #editSpotForm input[type="text"],
+        #editSpotForm select,
+        #editSpotForm textarea {
+            width: 100%;
+        }
+
+        #spotForm textarea,
+        #editSpotForm textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        input[type="file"] {
+            width: 100%;
+            font-size: 13px;
+        }
+
+        input[type="file"]::file-selector-button {
+            margin-right: 10px;
+            padding: 6px 12px;
+            border: 1px solid var(--line-strong);
+            border-radius: var(--radius);
+            background: var(--card);
+            color: var(--sumi);
+            cursor: pointer;
+        }
+
+        .photo-help {
+            font-size: 12px;
+            color: var(--sub);
+            margin-top: 4px;
+        }
+
+        #formButtons,
+        #editFormButtons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 8px;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
         }
 
         .photo-preview {
@@ -290,15 +738,21 @@
             margin-top: 8px;
         }
 
-        .photo-preview-item {
+        .photo-preview:empty {
+            display: none;
+        }
+
+        .photo-preview-item,
+        .existing-photo-item {
             position: relative;
         }
 
-        .photo-preview-item img {
+        .photo-preview-item img,
+        .existing-photo-item img {
             width: 100%;
             height: 90px;
             object-fit: cover;
-            border-radius: 6px;
+            border-radius: var(--radius);
             display: block;
         }
 
@@ -311,33 +765,105 @@
             width: 24px;
             height: 24px;
             cursor: pointer;
-            background: rgba(0,0,0,0.65);
+            background: rgba(43, 38, 34, 0.75);
             color: white;
             line-height: 20px;
             padding: 0;
-        }
-
-        .existing-photo-item {
-            position: relative;
-        }
-
-        .existing-photo-item img {
-            width: 100%;
-            height: 90px;
-            object-fit: cover;
-            border-radius: 6px;
-            display: block;
         }
 
         .existing-photo-item button {
             position: absolute;
             top: 4px;
             right: 4px;
+            padding: 2px 8px;
+            font-size: 11px;
+            border: none;
+            border-radius: var(--radius);
+            background: rgba(43, 38, 34, 0.75);
+            color: white;
+            cursor: pointer;
         }
 
-        .small-note {
-            font-size: 12px;
-            color: #666;
+        .existing-photo-item button:disabled {
+            background: var(--shu);
+        }
+
+        /* =========================================
+           フッター（管理者ログイン）
+           ========================================= */
+        #authArea {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 8px;
+            margin-top: 18px;
+            padding-top: 14px;
+            border-top: 1px solid var(--line);
+            font-size: 13px;
+            color: var(--sub);
+        }
+
+        #userInfo,
+        #roleInfo {
+            font-size: 13px;
+        }
+
+        #roleInfo {
+            color: var(--shu);
+        }
+
+        /* =========================================
+           お知らせ（画面下に数秒だけ表示）
+           ========================================= */
+        #toastArea {
+            position: fixed;
+            left: 50%;
+            bottom: 24px;
+            transform: translateX(-50%);
+            z-index: 100000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            pointer-events: none;
+            width: max-content;
+            max-width: 92vw;
+        }
+
+        .toast {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            padding: 10px 16px;
+            border-radius: var(--radius);
+            background: var(--sumi);
+            color: var(--card);
+            font-size: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            white-space: pre-line;
+            pointer-events: auto;
+            animation: toast-in 0.2s ease-out;
+        }
+
+        .toast.error {
+            background: var(--shu);
+        }
+
+        .toast .ti {
+            margin-top: 2px;
+        }
+
+        .toast.hide {
+            opacity: 0;
+            transform: translateY(6px);
+            transition: opacity 0.25s, transform 0.25s;
+        }
+
+        @keyframes toast-in {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
         }
 
         /* =========================================
@@ -348,11 +874,10 @@
             position: fixed;
             inset: 0;
             z-index: 99999;
-            background: rgba(0, 0, 0, 0.88);
+            background: rgba(24, 21, 19, 0.92);
             align-items: center;
             justify-content: center;
             padding: 60px 20px 40px;
-            box-sizing: border-box;
         }
 
         #photoLightbox.open {
@@ -366,7 +891,7 @@
             width: auto;
             height: auto;
             object-fit: contain;
-            border-radius: 6px;
+            border-radius: var(--radius);
             box-shadow: 0 8px 35px rgba(0,0,0,0.5);
         }
 
@@ -378,9 +903,9 @@
             height: 44px;
             border: 0;
             border-radius: 50%;
-            background: rgba(255,255,255,0.9);
-            color: #222;
-            font-size: 30px;
+            background: var(--card);
+            color: var(--sumi);
+            font-size: 28px;
             line-height: 44px;
             padding: 0;
             cursor: pointer;
@@ -394,11 +919,48 @@
             bottom: 12px;
             text-align: center;
             color: white;
+            font-family: var(--serif);
             font-size: 15px;
+            letter-spacing: 0.05em;
             text-shadow: 0 1px 3px rgba(0,0,0,0.8);
         }
 
+        /* =========================================
+           スマホ
+           ========================================= */
         @media (max-width: 600px) {
+            .page {
+                padding: 0 12px 20px;
+            }
+
+            .site-header {
+                padding: 14px 0 12px;
+            }
+
+            .site-title {
+                font-size: 21px;
+            }
+
+            .site-logo {
+                width: 34px;
+                height: 34px;
+                font-size: 19px;
+            }
+
+            #map {
+                height: 70vh;
+            }
+
+            /* マップ名が切れないよう、選択欄を横幅いっぱいにする */
+            #mapSelect {
+                min-width: 0;
+                flex: 1 1 calc(100% - 60px);
+            }
+
+            .map-bar-spacer {
+                display: none;
+            }
+
             #photoLightbox {
                 padding: 55px 10px 35px;
             }
@@ -417,41 +979,52 @@
 </head>
 
 <body>
+<div class="page">
 
-    <h1>佐渡島マップ <small style="font-size:16px;color:#c05600;">（テスト版）</small></h1>
+    <header class="site-header">
+        <div class="site-logo" aria-hidden="true"><i class="ti ti-map-2"></i></div>
+        <div>
+            <h1 class="site-title">佐渡島マップ</h1>
+            <p class="site-subtitle">佐渡での活動・宿泊・観光の記録</p>
+        </div>
+        <span class="test-badge">テスト版</span>
+    </header>
 
     <!-- マップ切り替え（全員に表示） -->
-    <div id="mapBar">
+    <div id="mapBar" class="card">
         <div class="map-bar-row">
-            <label for="mapSelect"><strong>🗺️ マップ：</strong></label>
+            <label for="mapSelect" class="field-label">マップ</label>
             <select id="mapSelect"></select>
-            <span id="lockBadge" class="lock-badge locked">🔒 閲覧のみ</span>
+            <span id="lockBadge" class="lock-badge locked"><i class="ti ti-lock"></i>閲覧のみ</span>
+            <span class="map-bar-spacer"></span>
+
+            <!-- 編集モード（ロック解除中のマップでは全員に表示） -->
+            <div id="controls">
+                <div class="controls-row">
+                    <span id="editHint"><i class="ti ti-hand-click"></i> 地図をクリックするとスポットを追加できます</span>
+                    <span id="modeText">現在：閲覧モード</span>
+                    <button id="editModeButton" type="button" class="btn btn-primary"><i class="ti ti-pencil"></i>編集モード</button>
+                </div>
+            </div>
         </div>
         <div id="mapDescription"></div>
     </div>
 
-    <!-- 編集モード（ロック解除中のマップでは全員に表示） -->
-    <div id="controls">
-        <button id="editModeButton" type="button">✏️ 編集モード</button>
-        <span id="modeText">現在：閲覧モード</span>
-        <span id="editHint">地図をクリックするとスポットを追加できます</span>
-    </div>
-
     <!-- 管理者だけ表示 -->
-    <div id="adminPanel">
-        <h3>👑 管理者メニュー</h3>
+    <div id="adminPanel" class="card">
+        <h3 class="admin-title"><i class="ti ti-shield-lock"></i>管理者メニュー</h3>
 
         <div class="admin-section">
             <h4>このマップの設定</h4>
             <div class="admin-form">
-                <button id="toggleLockButton" type="button">🔒 編集をロック</button>
+                <button id="toggleLockButton" type="button" class="btn btn-accent"><i class="ti ti-lock"></i>編集をロック</button>
                 <span id="lockStatusText" class="small-note"></span>
             </div>
-            <div class="admin-form" style="margin-top:8px;">
+            <div class="admin-form" style="margin-top:10px;">
                 <input type="text" id="editMapName" placeholder="マップ名">
                 <input type="text" id="editMapDescription" placeholder="説明（任意）">
-                <button id="saveMapButton" type="button">💾 名前・説明を保存</button>
-                <button id="deleteMapButton" type="button">🗑️ このマップを削除</button>
+                <button id="saveMapButton" type="button" class="btn"><i class="ti ti-device-floppy"></i>名前・説明を保存</button>
+                <button id="deleteMapButton" type="button" class="btn btn-danger"><i class="ti ti-trash"></i>このマップを削除</button>
             </div>
         </div>
 
@@ -464,32 +1037,35 @@
                     <input type="checkbox" id="newMapUnlocked">
                     作成後すぐに誰でも編集できるようにする
                 </label>
-                <button id="createMapButton" type="button">➕ 作成</button>
+                <button id="createMapButton" type="button" class="btn btn-primary"><i class="ti ti-plus"></i>作成</button>
             </div>
         </div>
     </div>
 
     <!-- カテゴリー絞り込み -->
-    <div id="categoryFilters">
-        <strong>表示：</strong>
-        <button type="button" onclick="showAllLayers()">すべて</button>
-        <button type="button" onclick="showCategory('活動場所')">🌾 活動場所</button>
-        <button type="button" onclick="showCategory('宿泊地')">🏠 宿泊地</button>
-        <button type="button" onclick="showCategory('観光地')">📍 観光地</button>
-        <button type="button" onclick="showCategory('飲食店')">🍴 飲食店</button>
-        <button type="button" onclick="showCategory('生活用品店')">🛒 生活用品店</button>
+    <div id="categoryFilters" role="group" aria-label="表示するカテゴリー">
+        <button type="button" class="chip active" data-category="" onclick="showAllLayers()"><i class="ti ti-layout-grid"></i>すべて</button>
+        <button type="button" class="chip" data-category="活動場所" style="--chip-color:#B33A2B" onclick="showCategory('活動場所')"><i class="ti ti-plant-2"></i>活動場所</button>
+        <button type="button" class="chip" data-category="宿泊地" style="--chip-color:#2B2622" onclick="showCategory('宿泊地')"><i class="ti ti-home"></i>宿泊地</button>
+        <button type="button" class="chip" data-category="観光地" style="--chip-color:#A5822F" onclick="showCategory('観光地')"><i class="ti ti-building-castle"></i>観光地</button>
+        <button type="button" class="chip" data-category="飲食店" style="--chip-color:#5B7C4F" onclick="showCategory('飲食店')"><i class="ti ti-tools-kitchen-2"></i>飲食店</button>
+        <button type="button" class="chip" data-category="生活用品店" style="--chip-color:#3E5C76" onclick="showCategory('生活用品店')"><i class="ti ti-shopping-bag"></i>生活用品店</button>
     </div>
 
     <div id="map"></div>
 
     <!-- 管理者ログイン（閲覧・編集だけならログイン不要） -->
-    <div id="authArea">
-        <button id="loginButton" type="button">🔑 管理者ログイン（Google）</button>
-        <button id="logoutButton" type="button" style="display:none;">ログアウト</button>
+    <footer id="authArea">
+        <button id="loginButton" type="button" class="btn btn-small"><i class="ti ti-brand-google"></i>管理者ログイン</button>
+        <button id="logoutButton" type="button" class="btn btn-small" style="display:none;"><i class="ti ti-logout"></i>ログアウト</button>
         <span id="userInfo"></span>
         <span id="roleInfo"></span>
-    </div>
+    </footer>
 
+</div>
+
+    <!-- お知らせ -->
+    <div id="toastArea" role="status" aria-live="polite"></div>
 
     <!-- 写真ライトボックス -->
     <div id="photoLightbox" aria-hidden="true">
@@ -500,7 +1076,7 @@
 
     <!-- スポット追加フォーム -->
     <div id="spotForm">
-        <h2>📍 スポットを追加</h2>
+        <h2><i class="ti ti-map-pin-plus"></i>スポットを追加</h2>
 
         <label for="spotName">スポット名</label>
         <input type="text" id="spotName" placeholder="例：REC活動場所①">
@@ -532,14 +1108,14 @@
         <div id="spotPhotoPreview" class="photo-preview"></div>
 
         <div id="formButtons">
-            <button type="button" id="cancelButton">キャンセル</button>
-            <button type="button" id="saveButton">保存</button>
+            <button type="button" id="cancelButton" class="btn">キャンセル</button>
+            <button type="button" id="saveButton" class="btn btn-primary"><i class="ti ti-check"></i>保存</button>
         </div>
     </div>
 
     <!-- スポット編集フォーム -->
     <div id="editSpotForm">
-        <h2>✏️ スポットを編集</h2>
+        <h2><i class="ti ti-pencil"></i>スポットを編集</h2>
 
         <label for="editSpotName">スポット名</label>
         <input type="text" id="editSpotName">
@@ -575,8 +1151,8 @@
         <div id="editPhotoPreview" class="photo-preview"></div>
 
         <div id="editFormButtons">
-            <button type="button" id="editCancelButton">キャンセル</button>
-            <button type="button" id="editSaveButton">保存</button>
+            <button type="button" id="editCancelButton" class="btn">キャンセル</button>
+            <button type="button" id="editSaveButton" class="btn btn-primary"><i class="ti ti-check"></i>保存</button>
         </div>
     </div>
 
@@ -604,10 +1180,13 @@
         // =========================================
         const map = L.map("map").setView([38.0, 138.4], 10);
 
+        // 地図の色味は CSS（.leaflet-tile-pane の filter）で和紙になじませている
         L.tileLayer(
-            "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+            "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
             {
-                attribution: "&copy; OpenStreetMap contributors"
+                attribution:
+                    "&copy; <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors",
+                maxZoom: 19
             }
         ).addTo(map);
 
@@ -632,7 +1211,7 @@
                 );
 
                 button.type = "button";
-                button.textContent = "⛶";
+                button.innerHTML = "<i class=\"ti ti-maximize\"></i>";
                 button.title = "地図を全画面表示";
                 button.setAttribute(
                     "aria-label",
@@ -658,7 +1237,7 @@
                             } else if (mapContainer.webkitRequestFullscreen) {
                                 mapContainer.webkitRequestFullscreen();
                             } else {
-                                alert("このブラウザでは全画面表示に対応していません。");
+                                notify("このブラウザでは全画面表示に対応していません。");
                                 return;
                             }
                         } else {
@@ -670,7 +1249,7 @@
                         }
                     } catch (error) {
                         console.error("全画面表示エラー:", error);
-                        alert("全画面表示を開始できませんでした。");
+                        notify("全画面表示を開始できませんでした。");
                     }
                 }
 
@@ -681,6 +1260,10 @@
                     const isFullscreen =
                         document.fullscreenElement === mapContainer ||
                         document.webkitFullscreenElement === mapContainer;
+
+                    button.innerHTML = isFullscreen
+                        ? "<i class=\"ti ti-minimize\"></i>"
+                        : "<i class=\"ti ti-maximize\"></i>";
 
                     button.title = isFullscreen
                         ? "全画面表示を終了"
@@ -726,45 +1309,47 @@
             "生活用品店": L.layerGroup().addTo(map)
         };
 
-        const icons = {
-            "活動場所": L.divIcon({
-                html: "🌾",
-                className: "emoji-marker",
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            }),
-            "宿泊地": L.divIcon({
-                html: "🏠",
-                className: "emoji-marker",
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            }),
-            "観光地": L.divIcon({
-                html: "📍",
-                className: "emoji-marker",
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            }),
-            "飲食店": L.divIcon({
-                html: "🍴",
-                className: "emoji-marker",
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            }),
-            "生活用品店": L.divIcon({
-                html: "🛒",
-                className: "emoji-marker",
-                iconSize: [40, 40],
-                iconAnchor: [20, 20]
-            })
+        // カテゴリーごとの色とアイコン（朱・墨・金・苔・藍）
+        const categoryStyles = {
+            "活動場所": { color: "#B33A2B", soft: "#F3E3DC", text: "#8E2E20", icon: "ti-plant-2" },
+            "宿泊地": { color: "#2B2622", soft: "#E8E2D7", text: "#2B2622", icon: "ti-home" },
+            "観光地": { color: "#A5822F", soft: "#F2EAD3", text: "#6E5517", icon: "ti-building-castle" },
+            "飲食店": { color: "#5B7C4F", soft: "#E5ECDD", text: "#3B5432", icon: "ti-tools-kitchen-2" },
+            "生活用品店": { color: "#3E5C76", soft: "#E1E8EE", text: "#2C4256", icon: "ti-shopping-bag" }
         };
 
-        const defaultIcon = L.divIcon({
-            html: "📍",
-            className: "emoji-marker",
-            iconSize: [40, 40],
-            iconAnchor: [20, 20]
+        const defaultCategoryStyle = { color: "#6F665B", soft: "#ECE6DA", text: "#6F665B", icon: "ti-map-pin" };
+
+        function getCategoryStyle(category) {
+            return categoryStyles[category] || defaultCategoryStyle;
+        }
+
+        // しずく型のピン（先端が地点を指すように、下中央を基準にする）
+        function makePinIcon(style, extraClass) {
+            return L.divIcon({
+                html:
+                    "<div class=\"pin " + (extraClass || "") + "\" style=\"--pin-color:" + style.color + "\">" +
+                    "<i class=\"ti " + style.icon + "\"></i></div>",
+                className: "pin-marker",
+                // 32px の正方形を45度回しているので、先端は中心から約23px下
+                iconSize: [32, 32],
+                iconAnchor: [16, 39],
+                popupAnchor: [0, -36]
+            });
+        }
+
+        const icons = {};
+
+        Object.keys(categoryStyles).forEach(function(category) {
+            icons[category] = makePinIcon(categoryStyles[category]);
         });
+
+        const defaultIcon = makePinIcon(defaultCategoryStyle);
+
+        const temporaryIcon = makePinIcon(
+            { color: "#FFFCF6", icon: "ti-plus" },
+            "pin-temp"
+        );
 
         // =========================================
         // 状態
@@ -805,6 +1390,40 @@
         const newMapName = document.getElementById("newMapName");
         const newMapDescription = document.getElementById("newMapDescription");
         const newMapUnlocked = document.getElementById("newMapUnlocked");
+        const toastArea = document.getElementById("toastArea");
+
+        // =========================================
+        // お知らせ（alert の代わりに画面下へ数秒だけ表示）
+        // =========================================
+        const ERROR_WORDS = /失敗|できません|できませんでした|ください|対応していません|超えて|ではありません|されていません|だけです/;
+
+        function notify(message) {
+            const text = String(message ?? "");
+            const isError = ERROR_WORDS.test(text);
+
+            const toast = document.createElement("div");
+            toast.className = "toast" + (isError ? " error" : "");
+
+            const icon = document.createElement("i");
+            icon.className = "ti " + (isError ? "ti-alert-circle" : "ti-check");
+
+            const body = document.createElement("span");
+            body.textContent = text;
+
+            toast.appendChild(icon);
+            toast.appendChild(body);
+            toastArea.appendChild(toast);
+
+            // エラーは読めるように長めに表示する
+            const duration = isError ? 6000 : 3000;
+
+            setTimeout(function() {
+                toast.classList.add("hide");
+                setTimeout(function() {
+                    toast.remove();
+                }, 300);
+            }, duration);
+        }
 
         // =========================================
         // 今のマップと編集できるかどうか
@@ -837,7 +1456,7 @@
                 );
 
             if (isPermissionError) {
-                alert(
+                notify(
                     prefix + "\n\n" +
                     "このマップは管理者によってロックされたため、編集できません。"
                 );
@@ -846,7 +1465,7 @@
                 return;
             }
 
-            alert(prefix + "\n" + (error && error.message ? error.message : ""));
+            notify(prefix + "\n" + (error && error.message ? error.message : ""));
         }
 
         // =========================================
@@ -924,12 +1543,12 @@
             input.addEventListener("change", function() {
                 Array.from(input.files || []).forEach(function(file) {
                     if (!file.type.startsWith("image/")) {
-                        alert(file.name + " は画像ファイルではありません。");
+                        notify(file.name + " は画像ファイルではありません。");
                         return;
                     }
 
                     if (file.size > 5 * 1024 * 1024) {
-                        alert(file.name + " は5MBを超えています。");
+                        notify(file.name + " は5MBを超えています。");
                         return;
                     }
 
@@ -1068,14 +1687,16 @@
         function buildGalleryHtml(images, spotName) {
             if (!images || images.length === 0) {
                 return `
-                    <div style="margin:8px 0 12px;">
-                        <strong>📷 写真</strong><br>
-                        <span style="font-size:13px;color:#777;">写真は登録されていません</span>
+                    <div class="spot-no-photo">
+                        <i class="ti ti-photo-off"></i>写真は登録されていません
                     </div>
                 `;
             }
 
-            const galleryItems = images.map(function(image) {
+            // ポップアップが縦に長くなりすぎないよう、最大4枚まで並べる
+            const shownImages = images.slice(0, 4);
+
+            const galleryItems = shownImages.map(function(image) {
                 const photoUrl = getPhotoUrl(image);
                 const safeUrl = escapeAttribute(photoUrl);
                 const safeName = escapeAttribute(spotName || "スポット写真");
@@ -1091,19 +1712,21 @@
                             onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
                             title="クリックで写真を拡大"
                         >
-                        <div style="display:none;font-size:12px;color:#c00;padding:8px;">
+                        <div class="spot-no-photo" style="display:none;">
                             写真を読み込めませんでした
                         </div>
                     </div>
                 `;
             }).join("");
 
+            const moreNote =
+                images.length > shownImages.length
+                    ? `<div class="small-note" style="padding:4px 14px 0;">ほか${images.length - shownImages.length}枚（編集画面で確認できます）</div>`
+                    : "";
+
             return `
-                <div>
-                    <strong>📷 写真（${images.length}枚）</strong>
-                    <div class="spot-gallery">${galleryItems}</div>
-                    <div style="font-size:12px;color:#777;margin-bottom:10px;">写真をクリックすると大きく表示できます</div>
-                </div>
+                <div class="spot-gallery${shownImages.length === 1 ? " single" : ""}">${galleryItems}</div>
+                ${moreNote}
             `;
         }
 
@@ -1197,7 +1820,7 @@
 
             if (error) {
                 console.error("Supabaseエラー:", error);
-                alert(
+                notify(
                     "スポット情報を取得できませんでした。\n" +
                     error.message
                 );
@@ -1264,56 +1887,56 @@
                     });
                 }
 
-                let popupHtml = `
-                    <div style="width:280px;">
-                        <h2 style="margin:0 0 8px;">${escapeHtml(place.name || "")}</h2>
+                const style = getCategoryStyle(place.category);
 
+                // 空欄の項目は表示しない
+                const infoRows = [
+                    ["ti-map-pin", "所在地", place.address],
+                    ["ti-clipboard-text", "活動内容・利用内容", place.activity_history],
+                    ["ti-notes", "メモ", place.note],
+                    ["ti-info-circle", "説明", place.description]
+                ].filter(function(row) {
+                    return row[2] && String(row[2]).trim() !== "";
+                }).map(function(row) {
+                    return `
+                        <i class="ti ${row[0]}"></i>
+                        <div>
+                            <div class="spot-info-label">${row[1]}</div>
+                            <div class="spot-info-value">${escapeHtml(row[2])}</div>
+                        </div>
+                    `;
+                }).join("");
+
+                let popupHtml = `
+                    <div class="spot-popup">
                         ${buildGalleryHtml(images, place.name)}
 
-                        <p>
-                            <strong>カテゴリー：</strong>
-                            ${escapeHtml(place.category || "")}
-                        </p>
+                        <div class="spot-popup-body">
+                            <h2 class="spot-popup-title">${escapeHtml(place.name || "")}</h2>
 
-                        ${
-                            place.subcategory
-                                ? `<p><strong>分類：</strong>${escapeHtml(place.subcategory)}</p>`
-                                : ""
-                        }
+                            <div class="spot-tags">
+                                <span class="spot-tag" style="--tag-bg:${style.soft};--tag-color:${style.text};">
+                                    <i class="ti ${style.icon}"></i> ${escapeHtml(place.category || "未分類")}
+                                </span>
+                                ${
+                                    place.subcategory
+                                        ? `<span class="spot-tag">${escapeHtml(place.subcategory)}</span>`
+                                        : ""
+                                }
+                            </div>
 
-                        <hr>
-
-                        <p>
-                            <strong>📍 所在地</strong><br>
-                            ${escapeHtml(place.address || "")}
-                        </p>
-
-                        <p>
-                            <strong>🌾 活動内容・利用内容</strong><br>
-                            ${escapeHtml(place.activity_history || "")}
-                        </p>
-
-                        <p>
-                            <strong>📝 メモ</strong><br>
-                            ${escapeHtml(place.note || "")}
-                        </p>
-
-                        ${
-                            place.description
-                                ? `<hr><p>${escapeHtml(place.description)}</p>`
-                                : ""
-                        }
+                            ${infoRows ? `<div class="spot-info">${infoRows}</div>` : ""}
                 `;
 
                 if (canEdit() && editMode) {
                     popupHtml += `
-                        <div style="margin-top:12px;">
+                        <div class="spot-popup-actions">
                             <button
                                 type="button"
+                                class="btn btn-small btn-primary"
                                 onclick="openEditForm(${Number(place.id)})"
-                                style="padding:6px 10px;cursor:pointer;margin-right:5px;"
                             >
-                                ✏️ 編集
+                                <i class="ti ti-pencil"></i>編集
                             </button>
                     `;
 
@@ -1321,10 +1944,10 @@
                         popupHtml += `
                             <button
                                 type="button"
+                                class="btn btn-small btn-danger"
                                 onclick="deleteSpot(${Number(place.id)})"
-                                style="padding:6px 10px;cursor:pointer;"
                             >
-                                🗑️ 削除
+                                <i class="ti ti-trash"></i>削除
                             </button>
                         `;
                     }
@@ -1332,7 +1955,7 @@
                     popupHtml += "</div>";
                 }
 
-                popupHtml += "</div>";
+                popupHtml += "</div></div>";
 
                 marker.bindPopup(popupHtml);
 
@@ -1347,7 +1970,18 @@
         // =========================================
         // カテゴリー表示
         // =========================================
+        // 選んでいるカテゴリーのチップに色を付ける（"" は「すべて」）
+        function setActiveChip(category) {
+            document.querySelectorAll("#categoryFilters .chip").forEach(function(chip) {
+                const isActive = chip.dataset.category === category;
+                chip.classList.toggle("active", isActive);
+                chip.setAttribute("aria-pressed", isActive ? "true" : "false");
+            });
+        }
+
         function showAllLayers() {
+            setActiveChip("");
+
             Object.values(layers).forEach(function(layer) {
                 if (!map.hasLayer(layer)) {
                     layer.addTo(map);
@@ -1356,6 +1990,8 @@
         }
 
         function showCategory(category) {
+            setActiveChip(category);
+
             Object.values(layers).forEach(function(layer) {
                 if (map.hasLayer(layer)) {
                     map.removeLayer(layer);
@@ -1377,11 +2013,15 @@
             editMode = value;
 
             if (editMode) {
-                editModeButton.textContent = "👀 閲覧モードに戻す";
+                editModeButton.innerHTML = "<i class=\"ti ti-eye\"></i>閲覧モードに戻す";
+                editModeButton.classList.remove("btn-primary");
+                editModeButton.classList.add("btn-accent");
                 modeText.textContent = "現在：編集モード";
                 editHint.style.display = "inline";
             } else {
-                editModeButton.textContent = "✏️ 編集モード";
+                editModeButton.innerHTML = "<i class=\"ti ti-pencil\"></i>編集モード";
+                editModeButton.classList.remove("btn-accent");
+                editModeButton.classList.add("btn-primary");
                 modeText.textContent = "現在：閲覧モード";
                 editHint.style.display = "none";
             }
@@ -1389,7 +2029,7 @@
 
         editModeButton.addEventListener("click", async function() {
             if (!canEdit()) {
-                alert("このマップはロックされているため、閲覧のみできます。");
+                notify("このマップはロックされているため、閲覧のみできます。");
                 return;
             }
 
@@ -1414,7 +2054,7 @@
 
             temporaryMarker = L.marker(
                 [newSpotLat, newSpotLng],
-                { icon: defaultIcon }
+                { icon: temporaryIcon }
             ).addTo(map);
 
             temporaryMarker
@@ -1459,12 +2099,12 @@
         // =========================================
         document.getElementById("saveButton").addEventListener("click", async function() {
             if (!canEdit()) {
-                alert("このマップはロックされているため、スポットを追加できません。");
+                notify("このマップはロックされているため、スポットを追加できません。");
                 return;
             }
 
             if (newSpotLat === null || newSpotLng === null) {
-                alert("地図上の場所を選択してください。");
+                notify("地図上の場所を選択してください。");
                 return;
             }
 
@@ -1476,7 +2116,7 @@
             const note = document.getElementById("spotNote").value.trim();
 
             if (!name) {
-                alert("スポット名を入力してください。");
+                notify("スポット名を入力してください。");
                 return;
             }
 
@@ -1508,13 +2148,13 @@
                 }
             } catch (imageError) {
                 console.error("写真保存エラー:", imageError);
-                alert(
+                notify(
                     "スポット本体は保存されましたが、写真の保存に失敗しました。\n" +
                     imageError.message
                 );
             }
 
-            alert("スポットを保存しました！");
+            notify("スポットを保存しました！");
             closeSpotForm();
             await loadPlaces();
         });
@@ -1524,7 +2164,7 @@
         // =========================================
         async function openEditForm(id) {
             if (!canEdit()) {
-                alert("このマップはロックされているため、編集できません。");
+                notify("このマップはロックされているため、編集できません。");
                 return;
             }
 
@@ -1537,7 +2177,7 @@
 
             if (error) {
                 console.error("スポット取得エラー:", error);
-                alert("スポット情報を取得できませんでした。\n" + error.message);
+                notify("スポット情報を取得できませんでした。\n" + error.message);
                 return;
             }
 
@@ -1666,12 +2306,12 @@
         // =========================================
         document.getElementById("editSaveButton").addEventListener("click", async function() {
             if (!canEdit()) {
-                alert("このマップはロックされているため、編集できません。");
+                notify("このマップはロックされているため、編集できません。");
                 return;
             }
 
             if (editingSpotId === null) {
-                alert("編集するスポットが選択されていません。");
+                notify("編集するスポットが選択されていません。");
                 return;
             }
 
@@ -1683,7 +2323,7 @@
             const note = document.getElementById("editSpotNote").value.trim();
 
             if (!name) {
-                alert("スポット名を入力してください。");
+                notify("スポット名を入力してください。");
                 return;
             }
 
@@ -1726,13 +2366,13 @@
                 }
             } catch (imageError) {
                 console.error("写真更新エラー:", imageError);
-                alert(
+                notify(
                     "スポットの文章は更新されましたが、写真の一部処理に失敗しました。\n" +
                     imageError.message
                 );
             }
 
-            alert("スポットを更新しました！");
+            notify("スポットを更新しました！");
             closeEditForm();
             await loadPlaces();
         });
@@ -1742,7 +2382,7 @@
         // =========================================
         async function deleteSpot(id) {
             if (!currentUserIsAdmin) {
-                alert("スポットを削除できるのは管理者だけです。");
+                notify("スポットを削除できるのは管理者だけです。");
                 return;
             }
 
@@ -1754,7 +2394,7 @@
                     .single();
 
             if (spotError) {
-                alert("スポット情報を取得できませんでした。\n" + spotError.message);
+                notify("スポット情報を取得できませんでした。\n" + spotError.message);
                 return;
             }
 
@@ -1805,11 +2445,11 @@
 
             if (error) {
                 console.error("スポット削除エラー:", error);
-                alert("スポットの削除に失敗しました。\n" + error.message);
+                notify("スポットの削除に失敗しました。\n" + error.message);
                 return;
             }
 
-            alert("スポットを削除しました！");
+            notify("スポットを削除しました！");
             await loadPlaces();
         }
 
@@ -1829,7 +2469,7 @@
 
             if (error) {
                 console.error("ログインエラー:", error);
-                alert("ログインに失敗しました。\n" + error.message);
+                notify("ログインに失敗しました。\n" + error.message);
             }
         });
 
@@ -1841,7 +2481,7 @@
 
             if (error) {
                 console.error("ログアウトエラー:", error);
-                alert("ログアウトに失敗しました。\n" + error.message);
+                notify("ログアウトに失敗しました。\n" + error.message);
                 return;
             }
 
@@ -1907,7 +2547,7 @@
 
             if (error) {
                 console.error("マップ一覧取得エラー:", error);
-                alert("マップ一覧を取得できませんでした。\n" + error.message);
+                notify("マップ一覧を取得できませんでした。\n" + error.message);
                 maps = [];
             } else {
                 maps = data || [];
@@ -1930,7 +2570,7 @@
             maps.forEach(function(m) {
                 const option = document.createElement("option");
                 option.value = String(m.id);
-                option.textContent = (m.is_locked ? "🔒 " : "🔓 ") + m.name;
+                option.textContent = m.name + (m.is_locked ? "（閲覧のみ）" : "");
                 mapSelect.appendChild(option);
             });
 
@@ -1954,10 +2594,10 @@
             } else {
                 lockBadge.className =
                     "lock-badge " + (currentMap.is_locked ? "locked" : "unlocked");
-                lockBadge.textContent =
+                lockBadge.innerHTML =
                     currentMap.is_locked
-                        ? "🔒 閲覧のみ"
-                        : "🔓 誰でも編集できます";
+                        ? "<i class=\"ti ti-lock\"></i>閲覧のみ"
+                        : "<i class=\"ti ti-lock-open\"></i>誰でも編集できます";
                 mapDescription.textContent = currentMap.description || "";
                 controls.style.display = canEdit() ? "block" : "none";
             }
@@ -1978,10 +2618,10 @@
                 document.getElementById("deleteMapButton").disabled = !hasMap;
 
                 if (hasMap) {
-                    toggleLockButton.textContent =
+                    toggleLockButton.innerHTML =
                         currentMap.is_locked
-                            ? "🔓 ロックを解除（誰でも編集可）"
-                            : "🔒 編集をロック（閲覧のみ）";
+                            ? "<i class=\"ti ti-lock-open\"></i>ロックを解除（誰でも編集可）"
+                            : "<i class=\"ti ti-lock\"></i>編集をロック（閲覧のみ）";
                     lockStatusText.textContent =
                         currentMap.is_locked
                             ? "現在：ロック中（管理者以外は閲覧のみ）"
@@ -2024,7 +2664,7 @@
 
             if (error) {
                 console.error("ロック切り替えエラー:", error);
-                alert("ロックの切り替えに失敗しました。\n" + error.message);
+                notify("ロックの切り替えに失敗しました。\n" + error.message);
                 return;
             }
 
@@ -2045,7 +2685,7 @@
             const name = editMapName.value.trim();
 
             if (!name) {
-                alert("マップ名を入力してください。");
+                notify("マップ名を入力してください。");
                 return;
             }
 
@@ -2060,7 +2700,7 @@
 
             if (error) {
                 console.error("マップ更新エラー:", error);
-                alert("マップの更新に失敗しました。\n" + error.message);
+                notify("マップの更新に失敗しました。\n" + error.message);
                 return;
             }
 
@@ -2078,7 +2718,7 @@
             const name = newMapName.value.trim();
 
             if (!name) {
-                alert("マップ名を入力してください。");
+                notify("マップ名を入力してください。");
                 return;
             }
 
@@ -2095,7 +2735,7 @@
 
             if (error) {
                 console.error("マップ作成エラー:", error);
-                alert("マップの作成に失敗しました。\n" + error.message);
+                notify("マップの作成に失敗しました。\n" + error.message);
                 return;
             }
 
@@ -2108,7 +2748,7 @@
             await loadMaps();
             await loadPlaces();
 
-            alert("「" + data.name + "」を作成しました！");
+            notify("「" + data.name + "」を作成しました！");
         }
 
         document.getElementById("createMapButton").addEventListener("click", createMap);
@@ -2146,7 +2786,7 @@
                     .eq("map_id", currentMap.id);
 
             if (spotsError) {
-                alert("スポット情報を取得できませんでした。\n" + spotsError.message);
+                notify("スポット情報を取得できませんでした。\n" + spotsError.message);
                 return;
             }
 
@@ -2191,7 +2831,7 @@
                         .eq("map_id", currentMap.id);
 
                 if (spotDeleteError) {
-                    alert("スポットの削除に失敗しました。\n" + spotDeleteError.message);
+                    notify("スポットの削除に失敗しました。\n" + spotDeleteError.message);
                     return;
                 }
             }
@@ -2204,11 +2844,11 @@
 
             if (error) {
                 console.error("マップ削除エラー:", error);
-                alert("マップの削除に失敗しました。\n" + error.message);
+                notify("マップの削除に失敗しました。\n" + error.message);
                 return;
             }
 
-            alert("マップ「" + currentMap.name + "」を削除しました。");
+            notify("マップ「" + currentMap.name + "」を削除しました。");
 
             currentMapId = null;
             setEditMode(false);
